@@ -9,7 +9,7 @@
 #include "gmath.h"
 
 //======== swap (double *a, double *b) ==========
-void swap (double *a, double *b) {
+void swap(double *a, double *b) {
     double temp = *a;
     *a = *b;
     *b = temp;
