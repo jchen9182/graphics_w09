@@ -8,6 +8,42 @@
 #include "matrix.h"
 #include "gmath.h"
 
+void swap (double *a, double *b) {
+    double temp = *a;
+    *a = *b;
+    *b = temp;
+}
+double * sort(double ** matrix, int col) {
+    double x0 = matrix[0][col];
+    double x1 = matrix[0][col + 1];
+    double x2 = matrix[0][col + 2];
+    double y0 = matrix[1][col];
+    double y1 = matrix[1][col + 1];
+    double y2 = matrix[1][col + 2];
+
+    if (y0 > y1) {
+        swap(&y0, &y1);
+        swap(&x0, &x1);
+    }
+    if (y1 > y2) {
+        swap(&y1, &y2);
+        swap(&x1, &x2);
+    }
+    if (y0 > y1) {
+        swap(&y0, &y1);
+        swap(&x0, &x1);
+    }
+
+    double * sorted = malloc(sizeof(double) * 6);
+    sorted[0] = x0;
+    sorted[1] = x1;
+    sorted[2] = x2;
+    sorted[3] = y0;
+    sorted[4] = y1;
+    sorted[5] = y2;
+
+    return sorted;
+}
 /*======== void scanline_convert() ==========
   Inputs: struct matrix *points
           int i
@@ -17,10 +53,44 @@
   Fills in polygon i by drawing consecutive horizontal (or vertical) lines.
   Color should be set differently for each polygon.
   ====================*/
-void scanline_convert(struct matrix * points, int i, screen s, zbuffer zb) {
+void scanline_convert(struct matrix * points, int col, screen s, zbuffer zb) {
+    double ** matrix = points -> m;
+    double * sorted = sort(matrix, col);
+    double xb = sorted[0];
+    double xm = sorted[1];
+    double xt = sorted[2];
+    double yb = sorted[3];
+    double ym = sorted[4];
+    double yt = sorted[5];
 
+    color c;
+    srand(col);
+    c.red = rand() % 255;
+    c.green = rand() % 255;
+    c.blue = rand() % 255;
+
+    double x0 = xb;
+    double x1 = xb;
+    double y = yb;
+    double mx0 = (xt - xb) / (yt - yb);
+    double mx1 = (xm - xb) / (ym - yb);
+    double mx2 = (xt - xm) / (yt - ym);
+
+    int toggle = 0;
+    while (y < yt) {
+        draw_line(x0, y, x1, y, s, zb, c);
+
+        x0 += mx0;
+        x1 += mx1;
+        y++;
+
+        if (y >= ym && !toggle) {
+            mx1 = mx2;
+            x1 = xm;
+            toggle = 1;
+        }
+    }
 }
-
 /*======== void add_polygon() ==========
   Inputs:   struct matrix *polygons
             double x0
@@ -37,7 +107,7 @@ void scanline_convert(struct matrix * points, int i, screen s, zbuffer zb) {
   and (x2, y2, z2) to the polygon matrix. They
   define a single triangle surface.
   ====================*/
-void add_polygon(struct matrix *polygons, 
+void add_polygon(struct matrix * polygons, 
                  double x0, double y0, double z0, 
                  double x1, double y1, double z1, 
                  double x2, double y2, double z2) {
@@ -54,8 +124,7 @@ void add_polygon(struct matrix *polygons,
   Goes through polygons 3 points at a time, drawing
   lines connecting each points to create bounding triangles
   ====================*/
-void draw_polygons(struct matrix *polygons, screen s, zbuffer zb, color c) {
-    double ** matrix = polygons -> m;
+void draw_polygons(struct matrix * polygons, screen s, zbuffer zb, color c) {
     int lastcol = polygons -> lastcol;
 
     if (lastcol < 3) {
@@ -66,18 +135,7 @@ void draw_polygons(struct matrix *polygons, screen s, zbuffer zb, color c) {
     for (int col = 0; col < lastcol - 2; col += 3) {
         double * normal = calculate_normal(polygons, col);
 
-        if (normal[2] > 0) {
-            double x0 = matrix[0][col];
-            double y0 = matrix[1][col];
-            double x1 = matrix[0][col + 1];
-            double y1 = matrix[1][col + 1];
-            double x2 = matrix[0][col + 2];
-            double y2 = matrix[1][col + 2];
-
-            draw_line(x0, y0, x1, y1, s, zb, c);
-            draw_line(x1, y1, x2, y2, s, zb, c);
-            draw_line(x2, y2, x0, y0, s, zb, c);
-        }
+        if (normal[2] > 0) scanline_convert(polygons, col, s, zb);
     }
 }
 
