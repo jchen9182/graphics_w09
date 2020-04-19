@@ -4,6 +4,9 @@
 #include "matrix.h"
 #include "ml6.h"
 
+// scanline
+void swap (double *a, double *b);
+double * sort(double ** matrix, int col);
 void scanline_convert(struct matrix * points, int col, screen s, zbuffer zb);
 
 //polygon organization

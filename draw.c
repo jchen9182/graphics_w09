@@ -76,19 +76,19 @@ void scanline_convert(struct matrix * points, int col, screen s, zbuffer zb) {
     double mx1 = (xm - xb) / (ym - yb);
     double mx2 = (xt - xm) / (yt - ym);
 
-    int toggle = 0;
+    int toggle = 1;
     while (y < yt) {
+        if (y >= ym && toggle) {
+            mx1 = mx2;
+            x1 = xm;
+            toggle = 0;
+        }
+
         draw_line(x0, y, x1, y, s, zb, c);
 
         x0 += mx0;
         x1 += mx1;
         y++;
-
-        if (y >= ym && !toggle) {
-            mx1 = mx2;
-            x1 = xm;
-            toggle = 1;
-        }
     }
 }
 /*======== void add_polygon() ==========
@@ -125,6 +125,7 @@ void add_polygon(struct matrix * polygons,
   lines connecting each points to create bounding triangles
   ====================*/
 void draw_polygons(struct matrix * polygons, screen s, zbuffer zb, color c) {
+    // double ** matrix = polygons -> m;
     int lastcol = polygons -> lastcol;
 
     if (lastcol < 3) {
@@ -135,7 +136,20 @@ void draw_polygons(struct matrix * polygons, screen s, zbuffer zb, color c) {
     for (int col = 0; col < lastcol - 2; col += 3) {
         double * normal = calculate_normal(polygons, col);
 
-        if (normal[2] > 0) scanline_convert(polygons, col, s, zb);
+        if (normal[2] > 0) {
+            scanline_convert(polygons, col, s, zb);
+
+            // double x0 = matrix[0][col];
+            // double y0 = matrix[1][col];
+            // double x1 = matrix[0][col + 1];
+            // double y1 = matrix[1][col + 1];
+            // double x2 = matrix[0][col + 2];
+            // double y2 = matrix[1][col + 2];
+
+            // draw_line(x0, y0, x1, y1, s, zb, c);
+            // draw_line(x1, y1, x2, y2, s, zb, c);
+            // draw_line(x2, y2, x0, y0, s, zb, c);
+        }
     }
 }
 
