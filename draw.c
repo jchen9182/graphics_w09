@@ -8,11 +8,13 @@
 #include "matrix.h"
 #include "gmath.h"
 
+//======== swap (double *a, double *b) ==========
 void swap (double *a, double *b) {
     double temp = *a;
     *a = *b;
     *b = temp;
 }
+//======== sort(double ** matrix, int col) ==========
 double * sort(double ** matrix, int col) {
     double x0 = matrix[0][col];
     double x1 = matrix[0][col + 1];
@@ -20,27 +22,36 @@ double * sort(double ** matrix, int col) {
     double y0 = matrix[1][col];
     double y1 = matrix[1][col + 1];
     double y2 = matrix[1][col + 2];
+    double z0 = matrix[2][col];
+    double z1 = matrix[2][col + 1];
+    double z2 = matrix[2][col + 2];
 
     if (y0 > y1) {
         swap(&y0, &y1);
         swap(&x0, &x1);
+        swap(&z0, &z1);
     }
     if (y1 > y2) {
         swap(&y1, &y2);
         swap(&x1, &x2);
+        swap(&z1, &z2);
     }
     if (y0 > y1) {
         swap(&y0, &y1);
         swap(&x0, &x1);
+        swap(&z0, &z1);
     }
 
-    double * sorted = malloc(sizeof(double) * 6);
+    double * sorted = malloc(sizeof(double) * 9);
     sorted[0] = x0;
     sorted[1] = x1;
     sorted[2] = x2;
     sorted[3] = y0;
     sorted[4] = y1;
     sorted[5] = y2;
+    sorted[6] = z0;
+    sorted[7] = z1;
+    sorted[8] = z2;
 
     return sorted;
 }
@@ -53,7 +64,7 @@ double * sort(double ** matrix, int col) {
   Fills in polygon i by drawing consecutive horizontal (or vertical) lines.
   Color should be set differently for each polygon.
   ====================*/
-void scanline_convert(struct matrix * points, int col, screen s, zbuffer zb) {
+void scanline_convert(struct matrix * points, int col, screen s, zbuffer zbuff) {
     double ** matrix = points -> m;
     double * sorted = sort(matrix, col);
     double xb = sorted[0];
@@ -62,6 +73,9 @@ void scanline_convert(struct matrix * points, int col, screen s, zbuffer zb) {
     double yb = sorted[3];
     double ym = sorted[4];
     double yt = sorted[5];
+    double zb = sorted[6];
+    double zm = sorted[7];
+    double zt = sorted[8];
 
     color c;
     srand(col);
@@ -71,23 +85,33 @@ void scanline_convert(struct matrix * points, int col, screen s, zbuffer zb) {
 
     double x0 = xb;
     double x1 = xb;
+    double z0 = zb;
+    double z1 = zb;
     double y = yb;
     double mx0 = (xt - xb) / (yt - yb);
     double mx1 = (xm - xb) / (ym - yb);
     double mx2 = (xt - xm) / (yt - ym);
+    double mz0 = (zt - zb) / (yt - yb);
+    double mz1 = (zm - zb) / (ym - yb);
+    double mz2 = (zt - zm) / (yt - ym);
 
     int toggle = 1;
     while (y < yt) {
         if (y >= ym && toggle) {
             mx1 = mx2;
             x1 = xm;
+            mz1 = mz2;
+            z1 = zm;
+
             toggle = 0;
         }
 
-        draw_line(x0, y, x1, y, s, zb, c);
+        draw_line(x0, y, z0, x1, y, z1, s, zbuff, c);
 
         x0 += mx0;
         x1 += mx1;
+        z0 += mz0;
+        z1 += mz1;
         y++;
     }
 }
@@ -491,103 +515,129 @@ void draw_lines(struct matrix * points, screen s, zbuffer zb, color c) {
     for (int point = 0; point < lastcol - 1; point += 2) {
         int x0 = points -> m[0][point];
         int y0 = points -> m[1][point];
-        int x1 = points -> m[0][point+1];
-        int y1 =points -> m[1][point+1];
+        double z0 = points -> m[2][point];
+        int x1 = points -> m[0][point + 1];
+        int y1 = points -> m[1][point + 1];
+        double z1 = points -> m[2][point + 1];
 
-        draw_line(x0, y0, x1, y1, s, zb, c);
+        draw_line(x0, y0, z0, x1, y1, z1, s, zb, c);
     }
 }
 
-void draw_line(int x0, int y0, int x1, int y1, screen s, zbuffer zb, color c) {
+void draw_line( int x0, int y0, double z0, int x1, int y1, double z1, 
+                screen s, zbuffer zb, color c) {
     int x, y, d, A, B;
+    double z, mz;
+
     //swap points if going right -> left
-    int xt, yt;
+    int xt, yt, zt;
     if (x0 > x1) {
         xt = x0;
         yt = y0;
+        zt = z0;
         x0 = x1;
         y0 = y1;
+        z0 = z1;
         x1 = xt;
         y1 = yt;
+        z1 = zt;
     }
 
     x = x0;
     y = y0;
+    z = z0;
     A = 2 * (y1 - y0);
     B = -2 * (x1 - x0);
 
     //octants 1 and 8
     if ( abs(x1 - x0) >= abs(y1 - y0) ) {
-
+        mz = (z1 - z0) / (x1 - x0);
         //octant 1
         if ( A > 0 ) {
-
             d = A + B/2;
+
             while ( x < x1 ) {
-                plot( s, zb, c, x, y );
+                plot( s, zb, c, x, y, z );
+
                 if ( d > 0 ) {
                     y+= 1;
                     d+= B;
                 }
+
                 x++;
                 d+= A;
-            } //end octant 1 while
-            plot( s, zb, c, x1, y1 );
-        } //end octant 1
+                z += mz;
+            }
+
+            plot( s, zb, c, x1, y1, z1 );
+        }
 
         //octant 8
         else {
             d = A - B/2;
 
             while ( x < x1 ) {
-                //printf("(%d, %d)\n", x, y);
-                plot( s, zb, c, x, y );
+                plot( s, zb, c, x, y, z );
+
                 if ( d < 0 ) {
                     y-= 1;
                     d-= B;
                 }
+
                 x++;
                 d+= A;
-            } //end octant 8 while
-            plot( s, zb, c, x1, y1 );
-        } //end octant 8
-    }//end octants 1 and 8
+                z += mz;
+            }
+
+            plot( s, zb, c, x1, y1, z1 );
+        }
+    }
 
     //octants 2 and 7
     else {
-
+        mz = (z1 - z0) / (y1 - y0);
         //octant 2
         if ( A > 0 ) {
             d = A/2 + B;
 
             while ( y < y1 ) {
-                plot( s, zb, c, x, y );
+
+                plot( s, zb, c, x, y, z );
+
                 if ( d < 0 ) {
                     x+= 1;
                     d+= A;
                 }
+
                 y++;
                 d+= B;
-            } //end octant 2 while
-            plot( s, zb, c, x1, y1 );
-        } //end octant 2
+                z += mz;
+            } 
+
+            plot( s, zb, c, x1, y1, z1 );
+        }
 
         //octant 7
         else {
             d = A/2 - B;
 
             while ( y > y1 ) {
-                plot( s, zb, c, x, y );
+
+                plot( s, zb, c, x, y, z );
+
                 if ( d > 0 ) {
                     x+= 1;
                     d+= A;
                 }
+
                 y--;
                 d-= B;
-            } //end octant 7 while
-            plot( s, zb, c, x1, y1 );
-        } //end octant 7
-    }//end octants 2 and 7
+                z += mz;
+            } 
+
+            plot( s, zb, c, x1, y1, z1 );
+        } 
+    }
 }
 
 //======== void change_color() ==========
