@@ -15,7 +15,7 @@ Inputs:   char * filename
           struct stack * csystems
           struct matrix * edges,
           struct matrix * polygons,
-          screen s
+          screen s, zbuffer zb
 Returns:
 Goes through the file named filename and performs all of the actions listed in that file.
 The file follows the following format:
@@ -75,12 +75,13 @@ void parse_file(char * filename,
                 struct stack * csystems,
                 struct matrix * edges,
                 struct matrix * polygons,
-                screen s) {
+                screen s, zbuffer zb) {
     // Init
     FILE *f;
     char line[256];
 
     clear_screen(s);
+    clear_zbuffer(zb);
     int SIZE = 500;
     color c;
     change_color(&c, 0, 0, 0);
@@ -178,7 +179,7 @@ void parse_file(char * filename,
             struct matrix * matrix = peek(csystems);
             matrix_mult(matrix, edges);
 
-            draw_lines(edges, s, c);
+            draw_lines(edges, s, zb, c);
             edges -> lastcol = 0;
         }
 
@@ -193,7 +194,7 @@ void parse_file(char * filename,
             struct matrix * matrix = peek(csystems);
             matrix_mult(matrix, edges);
 
-            draw_lines(edges, s, c);
+            draw_lines(edges, s, zb, c);
             edges -> lastcol = 0;
         }
 
@@ -213,7 +214,7 @@ void parse_file(char * filename,
             struct matrix * matrix = peek(csystems);
             matrix_mult(matrix, edges);
 
-            draw_lines(edges, s, c);
+            draw_lines(edges, s, zb, c);
             edges -> lastcol = 0;
         }
 
@@ -230,7 +231,7 @@ void parse_file(char * filename,
             struct matrix * matrix = peek(csystems);
             matrix_mult(matrix, polygons);
 
-            draw_polygons(polygons, s, c);
+            draw_polygons(polygons, s, zb, c);
             polygons -> lastcol = 0;
         }
 
@@ -245,7 +246,7 @@ void parse_file(char * filename,
             struct matrix * matrix = peek(csystems);
             matrix_mult(matrix, polygons);
 
-            draw_polygons(polygons, s, c);
+            draw_polygons(polygons, s, zb, c);
             polygons -> lastcol = 0;
         }
 
@@ -260,11 +261,16 @@ void parse_file(char * filename,
             struct matrix * matrix = peek(csystems);
             matrix_mult(matrix, polygons);
 
-            draw_polygons(polygons, s, c);
+            draw_polygons(polygons, s, zb, c);
             polygons -> lastcol = 0;
         }
 
         //  Misc
+        else if (!strcmp(lines[i], "clear")) {
+            clear_screen(s);
+            clear_zbuffer(zb);
+        }
+
         else if (!strcmp(lines[i], "display")) {
             // int elastcol = edges -> lastcol;
             // int plastcol = polygons -> lastcol;
@@ -301,11 +307,6 @@ void parse_file(char * filename,
         // else if (!strcmp(lines[i], "apply")) {
         //     matrix_mult(transform, edges);
         //     matrix_mult(transform, polygons);
-        // }
-
-        // else if (!strcmp(lines[i], "clear")) {
-        //     edges -> lastcol = 0;
-        //     polygons -> lastcol = 0;
         // }
     }
 }

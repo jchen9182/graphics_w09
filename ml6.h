@@ -45,4 +45,7 @@ typedef struct point_t color;
 */
 typedef struct point_t screen[XRES][YRES];
 
+//z-buffer is a 2d array of doubles to store z values
+typedef double zbuffer[XRES][YRES];
+
 #endif

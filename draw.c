@@ -8,6 +8,19 @@
 #include "matrix.h"
 #include "gmath.h"
 
+/*======== void scanline_convert() ==========
+  Inputs: struct matrix *points
+          int i
+          screen s
+          zbuffer zb
+  Returns:
+  Fills in polygon i by drawing consecutive horizontal (or vertical) lines.
+  Color should be set differently for each polygon.
+  ====================*/
+void scanline_convert(struct matrix * points, int i, screen s, zbuffer zb) {
+
+}
+
 /*======== void add_polygon() ==========
   Inputs:   struct matrix *polygons
             double x0
@@ -41,7 +54,7 @@ void add_polygon(struct matrix *polygons,
   Goes through polygons 3 points at a time, drawing
   lines connecting each points to create bounding triangles
   ====================*/
-void draw_polygons(struct matrix *polygons, screen s, color c) {
+void draw_polygons(struct matrix *polygons, screen s, zbuffer zb, color c) {
     double ** matrix = polygons -> m;
     int lastcol = polygons -> lastcol;
 
@@ -61,9 +74,9 @@ void draw_polygons(struct matrix *polygons, screen s, color c) {
             double x2 = matrix[0][col + 2];
             double y2 = matrix[1][col + 2];
 
-            draw_line(x0, y0, x1, y1, s, c);
-            draw_line(x1, y1, x2, y2, s, c);
-            draw_line(x2, y2, x0, y0, s, c);
+            draw_line(x0, y0, x1, y1, s, zb, c);
+            draw_line(x1, y1, x2, y2, s, zb, c);
+            draw_line(x2, y2, x0, y0, s, zb, c);
         }
     }
 }
@@ -395,7 +408,7 @@ Returns:
 Go through points 2 at a time and call draw_line to add that line
 to the screen
 ====================*/
-void draw_lines(struct matrix * points, screen s, color c) {
+void draw_lines(struct matrix * points, screen s, zbuffer zb, color c) {
     int lastcol = points -> lastcol;
 
     if (lastcol < 2) {
@@ -409,11 +422,11 @@ void draw_lines(struct matrix * points, screen s, color c) {
         int x1 = points -> m[0][point+1];
         int y1 =points -> m[1][point+1];
 
-        draw_line(x0, y0, x1, y1, s, c);
+        draw_line(x0, y0, x1, y1, s, zb, c);
     }
 }
 
-void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
+void draw_line(int x0, int y0, int x1, int y1, screen s, zbuffer zb, color c) {
     int x, y, d, A, B;
     //swap points if going right -> left
     int xt, yt;
@@ -439,7 +452,7 @@ void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
 
             d = A + B/2;
             while ( x < x1 ) {
-                plot( s, c, x, y );
+                plot( s, zb, c, x, y );
                 if ( d > 0 ) {
                     y+= 1;
                     d+= B;
@@ -447,7 +460,7 @@ void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
                 x++;
                 d+= A;
             } //end octant 1 while
-            plot( s, c, x1, y1 );
+            plot( s, zb, c, x1, y1 );
         } //end octant 1
 
         //octant 8
@@ -456,7 +469,7 @@ void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
 
             while ( x < x1 ) {
                 //printf("(%d, %d)\n", x, y);
-                plot( s, c, x, y );
+                plot( s, zb, c, x, y );
                 if ( d < 0 ) {
                     y-= 1;
                     d-= B;
@@ -464,7 +477,7 @@ void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
                 x++;
                 d+= A;
             } //end octant 8 while
-            plot( s, c, x1, y1 );
+            plot( s, zb, c, x1, y1 );
         } //end octant 8
     }//end octants 1 and 8
 
@@ -476,7 +489,7 @@ void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
             d = A/2 + B;
 
             while ( y < y1 ) {
-                plot( s, c, x, y );
+                plot( s, zb, c, x, y );
                 if ( d < 0 ) {
                     x+= 1;
                     d+= A;
@@ -484,7 +497,7 @@ void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
                 y++;
                 d+= B;
             } //end octant 2 while
-            plot( s, c, x1, y1 );
+            plot( s, zb, c, x1, y1 );
         } //end octant 2
 
         //octant 7
@@ -492,7 +505,7 @@ void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
             d = A/2 - B;
 
             while ( y > y1 ) {
-                plot( s, c, x, y );
+                plot( s, zb, c, x, y );
                 if ( d > 0 ) {
                     x+= 1;
                     d+= A;
@@ -500,7 +513,7 @@ void draw_line(int x0, int y0, int x1, int y1, screen s, color c) {
                 y--;
                 d-= B;
             } //end octant 7 while
-            plot( s, c, x1, y1 );
+            plot( s, zb, c, x1, y1 );
         } //end octant 7
     }//end octants 2 and 7
 }

@@ -1,8 +1,11 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-void plot( screen s, color c, int x, int y);
+#include "ml6.h"
+
+void plot( screen s, zbuffer zb, color c, int x, int y);
 void clear_screen( screen s);
+void clear_zbuffer( zbuffer zb );
 void save_ppm( screen s, char *file);
 void save_ppm_ascii( screen s, char *file);
 void save_extension( screen s, char *file);

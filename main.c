@@ -12,6 +12,7 @@
 
 int main(int argc, char **argv) {
     screen s;
+    zbuffer zb;
     struct matrix * edges;
     struct matrix * polygons;
     struct stack * csystems;
@@ -21,9 +22,9 @@ int main(int argc, char **argv) {
     csystems = new_stack();
 
     if (argc == 2)
-        parse_file(argv[1], csystems, edges, polygons, s);
+        parse_file(argv[1], csystems, edges, polygons, s, zb);
     else
-        parse_file("stdin", csystems, edges, polygons, s);
+        parse_file("stdin", csystems, edges, polygons, s, zb);
 
     free_matrix(edges);
     free_matrix(polygons);

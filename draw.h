@@ -4,12 +4,14 @@
 #include "matrix.h"
 #include "ml6.h"
 
+void scanline_convert(struct matrix * points, int i, screen s, zbuffer zb);
+
 //polygon organization
 void add_polygons( struct matrix * polys,
                    double x0, double y0, double z0,
                    double x1, double y1, double z1,
                    double x2, double y2, double z2);
-void draw_polygons( struct matrix * polys, screen s, color c);
+void draw_polygons( struct matrix * polys, screen s, zbuffer zb, color c);
 
 //advanced shapes
 //3d shapes
@@ -43,8 +45,8 @@ void add_edge(struct matrix * points,
 	       double x0, double y0, double z0,
 	       double x1, double y1, double z1);
 
-void draw_lines(struct matrix * points, screen s, color c);
-void draw_line(int x0, int y0, int x1, int y1, screen s, color c);
+void draw_lines(struct matrix * points, screen s, zbuffer zb, color c);
+void draw_line(int x0, int y0, int x1, int y1, screen s, zbuffer zb, color c);
 
 void change_color(color * c, int r, int g, int b);
 
